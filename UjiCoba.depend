@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1716445848 source:c:\users\asus\music\tes\ujicoba\main.cpp
+	<iostream>
+	<vector>
+	<string>
+	<fstream>
+	<algorithm>
+

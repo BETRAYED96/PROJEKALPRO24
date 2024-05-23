@@ -1,0 +1,25 @@
+USER admin admin123
+USER khay khay123
+UJIAN Matematika_Semester_Ganjil
+SOAL pg Si Ayam dan Telur
+OPTION Ayam
+OPTION Telur
+OPTION Keduanya
+OPTION Tidak ada yang benar
+ANSWER d
+UJIANINDEX 0
+SOAL essay Luas Persegi Panjang
+ANSWER panjang * lebar
+UJIANINDEX 0
+UJIAN Bahasa_Indonesia
+SOAL pg Apa ibukota Indonesia?
+OPTION Jakarta
+OPTION Surabaya
+OPTION Bandung
+OPTION Medan
+ANSWER a
+UJIANINDEX 1
+SOAL essay Tuliskan definisi puisi!
+ANSWER Karya sastra yang ditulis dalam bentuk puisi yang memiliki irama dan ritme tertentu.
+UJIANINDEX 1
+USER Helmi 123
