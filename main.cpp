@@ -4,6 +4,7 @@
 #include <vector>
 #include <ctime>
 #include <cstdlib>
+#include <sstream>
 
 using namespace std;
 
@@ -13,24 +14,34 @@ struct Ujian {
     string soalFileName;
 };
 
-// Deklarasi awal fungsi void
+// Deklarasi awal fungsi
 void displayClosingMessage();
 void tambahUjian();
 void lihatUjian();
 void hapusUjian();
 void signUp();
 bool login();
-bool loginPengerjaSoal();
+string loginPengerjaSoal();
 void displayAdminMenu();
 void displayPengerjaSoalMenu();
-void mulaiUjian();
+void mulaiUjian(const string& username);
 bool sudahMengerjakanUjianSebelumnya(const string& username);
-void simpanSkor(string username, int skor);
+void simpanSkor(const string& username, int skor);
 
+vector<string> split(const string& s, char delimiter) {
+    vector<string> tokens;
+    stringstream ss(s);
+    string token;
+    while (getline(ss, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
 int main() {
     int choice;
     bool loggedIn = false; // Status login
     bool loggedInAdmin = false; // Status login admin
+    string username; // Username untuk pengerja soal
 
     do {
         cout << "=================================" << endl;
@@ -49,18 +60,22 @@ int main() {
                 if (login()) {
                     loggedIn = true;
                     loggedInAdmin = true;
+                    system("cls");
                     cout << "Selamat datang, Admin!" << endl;
                     while (loggedInAdmin) {
                         displayAdminMenu();
                         cin >> choice;
                         switch (choice) {
                             case 1:
+                                system("cls");
                                 tambahUjian();
                                 break;
                             case 2:
+                                system("cls");
                                 lihatUjian();
                                 break;
                             case 3:
+                                system("cls");
                                 hapusUjian();
                                 break;
                             case 4:
@@ -68,22 +83,26 @@ int main() {
                                 break;
                             default:
                                 cout << "Pilihan tidak valid!" << endl;
+                                system("pause");
+                                system("cls");
                         }
                     }
                 }
                 break;
             case 2:
                 // Login sebagai Pengerja Soal
-                if (loginPengerjaSoal()) {
+                username = loginPengerjaSoal();
+                if (!username.empty()) {
                     loggedIn = true;
-                    cout << "Selamat datang, Pengerja Soal!" << endl;
+                    system("cls");
+                    cout << "Selamat datang, " << username << "!" << endl;
                     while (loggedIn) {
                         displayPengerjaSoalMenu();
                         cin >> choice;
                         switch (choice) {
                             case 1:
-                                if (!sudahMengerjakanUjianSebelumnya("pengerja_soal")) {
-                                    mulaiUjian();
+                                if (!sudahMengerjakanUjianSebelumnya(username)) {
+                                    mulaiUjian(username);
                                 } else {
                                     cout << "Anda sudah menyelesaikan ujian sebelumnya." << endl;
                                 }
@@ -93,12 +112,15 @@ int main() {
                                 break;
                             default:
                                 cout << "Pilihan tidak valid!" << endl;
+                                system("pause");
+                                system("cls");
                         }
                     }
                 }
                 break;
             case 3:
                 // Sign up
+                system("cls");
                 signUp();
                 break;
             case 4:
@@ -107,6 +129,8 @@ int main() {
                 break;
             default:
                 cout << "Pilihan tidak valid!" << endl;
+                system("pause");
+                system("cls");
         }
     } while (choice != 4);
 
@@ -121,7 +145,7 @@ void displayAdminMenu() {
     cout << "1. Menambahkan ujian" << endl;
     cout << "2. Melihat ujian" << endl;
     cout << "3. Menghapus ujian" << endl;
-    cout << "4. Keluar (Kembali ke menu Sistem Ujian Online)" << endl;
+    cout << "4. Keluar " << endl;
     cout << "Masukkan pilihan: ";
 }
 
@@ -169,41 +193,43 @@ void tambahUjian() {
     cin.ignore();
 
     for (int i = 1; i <= numQuestions; ++i) {
-        string pertanyaan, tipeSoal, jawaban, pilihanJawaban;
+        string pertanyaan, jawabanBenar;
+        vector<string> pilihan;
         cout << "Masukkan pertanyaan " << i << ": ";
         getline(cin, pertanyaan);
 
-        cout << "Pilih tipe soal (pg/isian): ";
-        getline(cin, tipeSoal);
+        cout << "Masukkan jawaban benar (a/b/c/d): ";
+        cin >> jawabanBenar;
 
-        if (tipeSoal == "pg") {
-            cout << "Masukkan pilihan jawaban (pisahkan dengan koma): ";
-            getline(cin, pilihanJawaban);
-            cout << "Masukkan jawaban benar (a/b/c/d): ";
-            getline(cin, jawaban);
-        } else if (tipeSoal == "isian") {
-            cout << "Masukkan jawaban benar: ";
-            getline(cin, jawaban);
-        } else {
-            cout << "Tipe soal tidak valid." << endl;
-            return;
+        cout << "Masukkan pilihan jawaban (pisahkan dengan koma): ";
+        cin.ignore();
+        string pilihanJawaban;
+        getline(cin, pilihanJawaban);
+
+        // Memisahkan pilihan jawaban
+        stringstream ss(pilihanJawaban);
+        string pilihanItem;
+        while (getline(ss, pilihanItem, ',')) {
+            pilihan.push_back(pilihanItem);
         }
 
         // Tulis soal ke dalam file soal.txt
         soalFile << "Pertanyaan " << i << ": " << pertanyaan << endl;
-        soalFile << "Tipe Soal: " << tipeSoal << endl;
-        if (tipeSoal == "pg") {
-            soalFile << "Pilihan Jawaban: " << pilihanJawaban << endl;
+        soalFile << "Jawaban Benar: " << jawabanBenar << endl;
+        soalFile << "Pilihan Jawaban: ";
+        for (size_t j = 0; j < pilihan.size(); ++j) {
+            if (j > 0) {
+                soalFile << ", ";
+            }
+            soalFile << pilihan[j];
         }
-        soalFile << "Jawaban Benar: " << jawaban << endl;
-        soalFile << endl;
+        soalFile << endl << endl;
     }
 
     soalFile.close();
 
     cout << "Ujian '" << ujian.nama << "' berhasil ditambahkan." << endl;
 }
-
 // Fungsi untuk memeriksa apakah pengguna sudah pernah mengerjakan ujian sebelumnya
 bool sudahMengerjakanUjianSebelumnya(const string& username) {
     ifstream skorFile("skor.txt");
@@ -215,6 +241,7 @@ bool sudahMengerjakanUjianSebelumnya(const string& username) {
     }
     return false;
 }
+
 // Fungsi untuk melihat daftar ujian
 void lihatUjian() {
     ifstream ujianFile("ujian.txt");
@@ -224,11 +251,14 @@ void lihatUjian() {
     }
 
     string ujian;
+    system("cls");
     cout << "Daftar ujian:" << endl;
     while (getline(ujianFile, ujian)) {
         cout << "- " << ujian << endl;
     }
     ujianFile.close();
+    system("pause");
+    system("cls");
 }
 
 // Fungsi untuk menghapus ujian
@@ -272,6 +302,8 @@ void hapusUjian() {
 
     cout << "Ujian '" << namaUjian << "' berhasil dihapus." << endl;
 }
+
+// Fungsi untuk memulai ujian
 // Fungsi untuk memulai ujian
 void mulaiUjian(const string& username) {
     // Membaca daftar ujian dari file ujian.txt
@@ -321,16 +353,32 @@ void mulaiUjian(const string& username) {
         time_t waktuUjian = 50 * 60; // 50 menit dalam detik
 
         while (getline(soalFile, pertanyaan) && difftime(time(nullptr), start) < waktuUjian) {
-            cout << "Soal " << nomorSoal << ": " << pertanyaan << endl;
+            cout << "Pertanyaan " << nomorSoal << ": " << pertanyaan << endl;
             getline(soalFile, tipeSoal);
             getline(soalFile, pilihanJawaban);
             getline(soalFile, jawabanBenar);
 
             if (tipeSoal == "pg") {
-                cout << "Pilihan Jawaban: " << pilihanJawaban << endl;
-                cout << "Masukkan jawaban Anda (a/b/c/d): ";
+                cout << "a. ";
+                size_t pos = pilihanJawaban.find(",");
+                cout << pilihanJawaban.substr(0, pos) << endl;
+                pilihanJawaban.erase(0, pos + 1);
+
+                cout << "b. ";
+                pos = pilihanJawaban.find(",");
+                cout << pilihanJawaban.substr(0, pos) << endl;
+                pilihanJawaban.erase(0, pos + 1);
+
+                cout << "c. ";
+                pos = pilihanJawaban.find(",");
+                cout << pilihanJawaban.substr(0, pos) << endl;
+                pilihanJawaban.erase(0, pos + 1);
+
+                cout << "d. " << pilihanJawaban << endl;
+
+                cout << "Jawaban Anda (a/b/c/d): ";
             } else {
-                cout << "Masukkan jawaban Anda: ";
+                cout << "Jawaban Anda: ";
             }
 
             time_t startSoal = time(nullptr);
@@ -374,142 +422,119 @@ void mulaiUjian(const string& username) {
     }
 }
 
-// Fungsi untuk sign up
+// Fungsi untuk menyimpan skor ke dalam file
+void simpanSkor(const string& username, int skor) {
+    ofstream skorFile("skor.txt", ios::app);
+    if (!skorFile.is_open()) {
+        cout << "Gagal membuka file skor." << endl;
+        return;
+    }
+
+    skorFile << username << ": " << skor << endl;
+    skorFile.close();
+}
+
+// Fungsi untuk signup
 void signUp() {
     string username, password;
-    cout << "======================================="<< endl;
-    cout << "              Sign Up"<< endl;
-    cout << "======================================="<< endl;
-    cout << "Masukkan username: ";
+    system("cls");
+    cout << "===================================" << endl;
+    cout << "              Sign Up" << endl;
+    cout << "===================================" << endl;
+    cout << "Masukkan username baru: ";
     cin >> username;
-    cout << "Masukkan password: ";
+    cout << "Masukkan password baru: ";
     cin >> password;
 
-    // Menambahkan data pengguna ke dalam database
-    ofstream databaseFile("database.txt", ios::app);
-    if (databaseFile.is_open()) {
-        // Periksa apakah username sudah digunakan
-        ifstream checkFile("database.txt");
-        string user;
-        bool isUsernameTaken = false;
-        while (checkFile >> user) {
-            if (user == username) {
-                isUsernameTaken = true;
-                break;
-            }
-        }
-        checkFile.close();
-
-        if (!isUsernameTaken) {
-            // Menyimpan username dan password ke dalam file
-            databaseFile << username << " " << password << endl;
-            cout << "\nSign up berhasil.\n" << endl;
-            system("pause");
-            system("cls");
-        } else {
-            cout << "Username '" << username << "' telah digunakan. Sign up gagal." << endl;
-        }
-        databaseFile.close();
-    } else {
-        cout << "Gagal melakukan sign up." << endl;
+    // Simpan ke dalam file user.txt
+    ofstream userFile("user.txt", ios::app);
+    if (!userFile.is_open()) {
+        cout << "Gagal membuka file user.txt" << endl;
+        return;
     }
+
+    userFile << username << " " << password << endl;
+    userFile.close();
+
+    cout << "Registrasi berhasil!" << endl;
+    system("pause");
+    system("cls");
 }
 
-// Fungsi untuk melakukan login
+// Fungsi untuk login
 bool login() {
     string username, password;
-    cout << "======================================="<< endl;
-    cout << "               Login"<< endl;
-    cout << "======================================="<< endl;
+    cout << "===================================" << endl;
+    cout << "               Login" << endl;
+    cout << "===================================" << endl;
     cout << "Masukkan username: ";
     cin >> username;
     cout << "Masukkan password: ";
     cin >> password;
-
-    // Cek apakah username dan password sesuai dengan admin
-    if (username == "admin123" && password == "sistemujian321") {
-        cout << "Login berhasil." << endl;
-        system("pause");
-        system("cls");
-        return true;
-    } else {
-        cout << "Username atau password salah." << endl;
-        system("pause");
-        system("cls");
+    ifstream userFile("user.txt");
+    if (!userFile.is_open()) {
+        cout << "Gagal membuka file user.txt" << endl;
         return false;
     }
-}
 
-// Fungsi untuk melakukan login sebagai pengerja soal
-// Fungsi untuk melakukan login sebagai pengerja soal
-bool loginPengerjaSoal() {
-    string username, password;
-    cout << "Apakah Anda sudah memiliki akun? (y/n): ";
-    char sudahPunyaAkun;
-    cin >> sudahPunyaAkun;
-
-    if (sudahPunyaAkun == 'y') {
-        system("pause");
-        system("cls");
-        cout << "======================================="<< endl;
-        cout << "              Sign Up"<< endl;
-        cout << "======================================="<< endl;
-        cout << "Masukkan username: ";
-        cin >> username;
-        cout << "Masukkan password: ";
-        cin >> password;
-
-        ifstream databaseFile("database.txt");
-        if (databaseFile.is_open()) {
-            string user, pass;
-            while (databaseFile >> user >> pass) {
-                if (user == username && pass == password) {
-                    databaseFile.close();
-                    cout << "Login berhasil." << endl;
-                    system("pause");
-                    system("cls");
-                    return true;
-                }
-            }
-            databaseFile.close();
-        } else {
-            cout << "Database tidak ditemukan." << endl;
-        system("pause");
-        system("cls");
-            return false;
+    string fileUsername, filePassword;
+    while (userFile >> fileUsername >> filePassword) {
+        if (username == fileUsername && password == filePassword) {
+            userFile.close();
+            cout << "Login berhasil!" << endl;
+            system("pause");
+            system("cls");
+            return true;
         }
-    } else {
-        cout << "\nAnda belum memiliki akun! \nSilakan sign up terlebih dahulu." << endl;
-        system("pause");
-        system("cls");
-        return false;
     }
 
+    userFile.close();
     cout << "Username atau password salah." << endl;
     system("pause");
     system("cls");
     return false;
 }
 
+// Fungsi untuk login pengerja soal
+string loginPengerjaSoal() {
+    string username, password;
+    system("cls");
+    cout << "===================================" << endl;
+    cout << "               Login" << endl;
+    cout << "===================================" << endl;
+    cout << "Masukkan username: ";
+    cin >> username;
+    cout << "Masukkan password: ";
+    cin >> password;
+
+    ifstream userFile("user.txt");
+    if (!userFile.is_open()) {
+        cout << "Gagal membuka file user.txt" << endl;
+        return "";
+    }
+
+    string fileUsername, filePassword;
+    while (userFile >> fileUsername >> filePassword) {
+        if (username == fileUsername && password == filePassword) {
+            userFile.close();
+            cout << "Login berhasil!" << endl;
+            return username;
+        }
+    }
+
+    userFile.close();
+    cout << "Username atau password salah." << endl;
+    system("pause");
+    system("cls");
+    return "";
+}
 
 // Fungsi untuk menampilkan menu pengerja soal
 void displayPengerjaSoalMenu() {
     cout << "=================================" << endl;
-    cout << "      Menu Pengerja Soal        " << endl;
+    cout << "       Menu Pengerja Soal        " << endl;
     cout << "=================================" << endl;
-    cout << "1. Mulai Ujian" << endl;
-    cout << "2. Keluar" << endl;
+    cout << "1. Mulai ujian" << endl;
+    cout << "2. Keluar " << endl;
     cout << "Masukkan pilihan: ";
 }
-
-// Fungsi untuk menyimpan skor pengguna setelah menyelesaikan ujian
-void simpanSkor(const string& username, int skor) {
-    ofstream skorFile("skor.txt", ios::app);
-    if (skorFile.is_open()) {
-        skorFile << username << " " << skor << endl;
-        skorFile.close();
-    } else {
-        cout << "Gagal membuka file skor.txt" << endl;
-    }
-}
-
